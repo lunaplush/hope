@@ -337,7 +337,7 @@ if val_dataset is None:
 
 train_dataset = SimpsonsDataset(train_files, mode='train')
 
-TRAIN_STATUS = False
+TRAIN_STATUS = True
 if TRAIN_STATUS:
     simple_cnn.load_state_dict(torch.load("my_cnn098.pth"))
     history = train(train_dataset, val_dataset, model=simple_cnn, epochs=4, batch_size=512)

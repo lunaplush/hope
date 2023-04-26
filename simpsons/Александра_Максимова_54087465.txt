@@ -1,0 +1,5 @@
+
+https://drive.google.com/drive/folders/1t0y7TA5OLUqX0imEfv62RVTiK96DpqLX?usp=sharing
+
+Блокнот с кодом обучения НС и файл  "my_cnn.pth" из которого командой simple_cnn.load_state_dict(torch.load("my_cnn.pth"))
+загружаются веса НС.
