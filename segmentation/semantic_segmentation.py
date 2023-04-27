@@ -73,11 +73,13 @@ Y = np.array(Y, np.float32)
 print(f'Loaded {len(X)} images')
 
 
-ix = np.random.choice(len(X), len(X), False)
+ix = np.random.default_rng(seed=10).choice(len(X), len(X), False)
+
 tr, val, ts = np.split(ix, [100, 150])
 
 from torch.utils.data import DataLoader
-batch_size = 16
+# 0 - Утонить batch size
+batch_size = 10
 data_tr = DataLoader(list(zip(np.rollaxis(X[tr], 3, 1), Y[tr, np.newaxis])),
                      batch_size=batch_size, shuffle=True)
 data_val = DataLoader(list(zip(np.rollaxis(X[val], 3, 1), Y[val, np.newaxis])),
@@ -88,9 +90,10 @@ data_ts = DataLoader(list(zip(np.rollaxis(X[ts], 3, 1), Y[ts, np.newaxis])),
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def predict(model, data):
+    """не используется пока"""
     model.eval()  # testing mode
     Y_pred = [model(X_batch) for X_batch, _ in data]
-    Y_pred = torch.sigmoid(Y_pred)
+    Y_pred = torch.sigmoid(Y_pred)#>0.5
     return np.array(Y_pred)
 
 
@@ -157,9 +160,8 @@ def train(model, opt, loss_fn, epochs, start_epoch_num, data_tr, data_val, data_
         analysis_dict["score_test"].append(score_test)
         analysis_dict["loss_test"].append(loss_fn(y_real=Y_test, y_pred=Y_hat_test).detach().numpy())
 
-
-
-        
+        score_train = score_model(model, iou_pytorch, data_tr)
+        analysis_dict["score_train"].append(score_train)
 
 
         clear_output(wait=True)
@@ -176,25 +178,28 @@ def train(model, opt, loss_fn, epochs, start_epoch_num, data_tr, data_val, data_
 
         plt.savefig("epoch{}.jpg".format(next_epoch_num+1))
         next_epoch_num += 1
-
-
-
-        analysis_dict["score_train"].append(np.NAN)
+        gc.collect()
 
     return pd.DataFrame(analysis_dict)
 
 # ---- Настройка следующего цикла обучения -----------
 # 1 - Установить название модели
-model_name = "segnetsmall_bce"
+#model_name = "segnetsmall_bce"
+#model_name = "segnetsmall_dice"
+#model_name = "segnetsmall_focal"
+model_name = "unet_bce"
+#model_name = "unet_bce"
 # 2 -  В соответсвии с названием модели выбрать класс нейронной сети
-model = SegNetSmall().to(device)
+#model = SegNetSmall().to(device)
+model = UNet().to(device)
 # 3 - Выбрать функцию ошибки для обучения
 criterion = bce_loss
-
+#criterion = dice_loss
+#criterion= focal_loss
 # 4 - Установить флаг - начала обучения FIRST_STEP True или False -  если продолжаем обучение
-FIRST_STEP = False
+FIRST_STEP = True
 # 5 - Установить сколько эпох за этот подход хотим обучить
-max_epochs = 2
+max_epochs = 1
 
 if FIRST_STEP:
     f = open("epoch.num", "wb")
